@@ -12,7 +12,7 @@
 - Progressive Web App (PWA)
 - ใช้งาน Offline ได้
 
-## 📲 วิธีติดตั้ง (Add to Home Screen)
+## 📲 วิธีติดตั้งแอป (Add to Home Screen)
 
 ### iOS (Safari)
 1. เปิด Safari → ไปที่ Demo link
@@ -29,4 +29,4 @@
 
 ## 📄 License
 
-© 2026 360DE - All rights reserved.
+© 2026 - 360DE - All rights reserved.
