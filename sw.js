@@ -1,18 +1,16 @@
 // 360DE Temperature Monitor - Service Worker
-// Version: 1.0.0
+// Version: 1.0.1 - Fixed for GitHub Pages subdirectory
 
 const CACHE_NAME = '360de-monitor-v1';
+
+// ใช้ relative paths สำหรับ subdirectory hosting
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/360DE.jpg',
-  '/icons/icon-180.png',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  // External CDNs (optional - ถ้า offline จะใช้ cached version)
-  'https://cdn.tailwindcss.com',
-  'https://unpkg.com/lucide@latest',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap'
+  './',
+  './index.html',
+  './360DE.jpg',
+  './icons/icon-180.png',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
 ];
 
 // Install Event - Cache ไฟล์ทั้งหมด
@@ -22,15 +20,7 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('[SW] Caching app shell...');
-        // Cache local files first (ต้องสำเร็จ)
-        return cache.addAll([
-          '/',
-          '/index.html',
-          '/360DE.jpg',
-          '/icons/icon-180.png',
-          '/icons/icon-192.png',
-          '/icons/icon-512.png'
-        ]);
+        return cache.addAll(ASSETS_TO_CACHE);
       })
       .then(() => {
         console.log('[SW] App shell cached successfully');
@@ -79,14 +69,7 @@ self.addEventListener('fetch', (event) => {
           // Clone response เพื่อเก็บ cache
           const responseClone = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            // เก็บเฉพาะ local files และ CDN ที่สำคัญ
-            if (event.request.url.includes(self.location.origin) ||
-                event.request.url.includes('cdn.tailwindcss.com') ||
-                event.request.url.includes('unpkg.com') ||
-                event.request.url.includes('fonts.googleapis.com') ||
-                event.request.url.includes('fonts.gstatic.com')) {
-              cache.put(event.request, responseClone);
-            }
+            cache.put(event.request, responseClone);
           });
         }
         return networkResponse;
@@ -98,9 +81,9 @@ self.addEventListener('fetch', (event) => {
           if (cachedResponse) {
             return cachedResponse;
           }
-          // ถ้าไม่มีใน cache และเป็น navigate request - แสดง offline page
+          // ถ้าไม่มีใน cache และเป็น navigate request - แสดง index
           if (event.request.mode === 'navigate') {
-            return caches.match('/index.html');
+            return caches.match('./index.html');
           }
           return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
         });

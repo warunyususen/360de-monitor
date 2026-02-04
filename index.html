@@ -11,7 +11,7 @@
     
     <!-- iOS PWA Support -->
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="360DE Monitor">
     <link rel="apple-touch-icon" href="icons/icon-180.png">
     
@@ -45,13 +45,13 @@
                             600: '#0284c7', // สีตอน Hover
                             900: '#0c4a6e', // สีตัวอักษรเข้ม
                         },
-                        // ชุดสีเดิม (Slate) มีใน Tailwind อยู่แล้ว
                         slate: {
                             850: '#151F32', // พื้นหลัง Dark mode ลึกๆ
                         }
                     },
                     animation: {
                         'blob': 'blob 7s infinite',
+                        'spin-slow': 'spin 1s linear infinite',
                     },
                     keyframes: {
                         blob: {
@@ -80,30 +80,44 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        /* Loading spinner */
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 
 <body class="bg-medical-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-500 min-h-screen flex items-center justify-center p-4 selection:bg-medical-500 selection:text-white">
 
-    <button id="theme-toggle" class="absolute top-4 right-4 p-3 rounded-full bg-white/80 dark:bg-slate-800/80 shadow-lg hover:shadow-xl transition-all border border-medical-100 dark:border-slate-700 group z-50">
+    <!-- Theme Toggle Button -->
+    <button id="theme-toggle" 
+            aria-label="สลับธีมสว่าง/มืด" 
+            class="absolute top-4 right-4 p-3 rounded-full bg-white/80 dark:bg-slate-800/80 shadow-lg hover:shadow-xl transition-all border border-medical-100 dark:border-slate-700 group z-50">
         <i data-lucide="sun" class="hidden dark:block w-5 h-5 text-yellow-400"></i>
         <i data-lucide="moon" class="block dark:hidden w-5 h-5 text-medical-900 group-hover:text-medical-500 transition-colors"></i>
     </button>
 
-    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+    <!-- Animated Background Blobs -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
         <div class="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-medical-200 dark:bg-blue-600 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-3xl opacity-30 dark:opacity-20 animate-blob"></div>
         <div class="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-blue-200 dark:bg-emerald-600 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-3xl opacity-30 dark:opacity-20 animate-blob animation-delay-2000"></div>
     </div>
 
     <main class="w-full max-w-[400px] relative z-10 fade-in">
         
+        <!-- Login Card -->
         <div class="relative bg-white/70 dark:bg-slate-800/60 glass-panel 
                     rounded-[2rem] dark:rounded-2xl 
                     shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-2xl 
                     border border-white/60 dark:border-slate-700 
                     p-8 transition-all duration-500">
             
-            <div class="absolute top-6 right-6 flex items-center gap-2">
+            <!-- Online Status Indicator -->
+            <div class="absolute top-6 right-6 flex items-center gap-2" aria-label="สถานะออนไลน์">
                 <span class="relative flex h-3 w-3">
                   <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
@@ -111,23 +125,28 @@
                 <span class="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 tracking-wider">ONLINE</span>
             </div>
 
+            <!-- Logo & Title -->
             <div class="text-center mb-8 pt-2">
                 <div class="w-24 h-24 mx-auto mb-4 rounded-full p-1 bg-gradient-to-tr from-white to-medical-50 dark:from-slate-700 dark:to-slate-600 shadow-lg">
-                    <img src="360DE.jpg" alt="Logo" class="w-full h-full object-cover rounded-full border-1 border-white dark:border-slate-800">
+                    <img src="360DE.jpg" alt="360DE Logo" class="w-full h-full object-cover rounded-full border-1 border-white dark:border-slate-800">
                 </div>
                 <h1 class="font-display text-2xl font-bold text-medical-900 dark:text-white mb-1">360DE Monitor</h1>
                 <p class="text-sm text-slate-500 dark:text-slate-400 font-light">ระบบตรวจวัดอุณหภูมิอัจฉริยะ</p>
             </div>
 
+            <!-- Login Form -->
             <form id="login-form" class="space-y-5" onsubmit="handleLogin(event)">
                 
+                <!-- Username Field -->
                 <div class="group">
-                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Username</label>
+                    <label for="username" class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Username</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <i data-lucide="user" class="w-5 h-5 text-medical-500/50 dark:text-slate-500 group-focus-within:text-medical-500 dark:group-focus-within:text-blue-500 transition-colors"></i>
                         </div>
-                        <input type="text" id="username" required 
+                        <input type="text" id="username" name="username" required 
+                            autocomplete="username"
+                            aria-describedby="error-msg"
                             class="block w-full pl-11 pr-4 py-3.5 
                                    bg-white dark:bg-slate-900/50 
                                    border border-medical-100 dark:border-slate-600 
@@ -140,14 +159,17 @@
                     </div>
                 </div>
 
+                <!-- Password Field -->
                 <div class="group">
-                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Password</label>
+                    <label for="password" class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Password</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <i data-lucide="lock" class="w-5 h-5 text-medical-500/50 dark:text-slate-500 group-focus-within:text-medical-500 dark:group-focus-within:text-blue-500 transition-colors"></i>
                         </div>
-                        <input type="password" id="password" required 
-                            class="block w-full pl-11 pr-4 py-3.5 
+                        <input type="password" id="password" name="password" required 
+                            autocomplete="current-password"
+                            aria-describedby="error-msg"
+                            class="block w-full pl-11 pr-12 py-3.5 
                                    bg-white dark:bg-slate-900/50 
                                    border border-medical-100 dark:border-slate-600 
                                    rounded-2xl 
@@ -156,26 +178,48 @@
                                    focus:outline-none focus:border-medical-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-medical-500/10 dark:focus:ring-blue-500/20 
                                    transition-all duration-300"
                             placeholder="••••••••">
+                        <!-- Password Toggle Button -->
+                        <button type="button" 
+                                id="password-toggle"
+                                aria-label="แสดง/ซ่อนรหัสผ่าน"
+                                class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-medical-500 dark:hover:text-blue-400 transition-colors">
+                            <i data-lucide="eye" id="eye-icon" class="w-5 h-5"></i>
+                            <i data-lucide="eye-off" id="eye-off-icon" class="w-5 h-5 hidden"></i>
+                        </button>
                     </div>
                 </div>
 
-                <div id="error-msg" class="hidden flex items-center gap-2 text-red-500 text-sm bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-xl border border-red-100 dark:border-red-900/30 animate-shake">
-                    <i data-lucide="alert-circle" class="w-4 h-4"></i>
-                    <span>Incorrect credentials</span>
+                <!-- Error Message -->
+                <div id="error-msg" 
+                     role="alert" 
+                     aria-live="polite"
+                     class="hidden items-center gap-2 text-red-500 text-sm bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-xl border border-red-100 dark:border-red-900/30">
+                    <i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0"></i>
+                    <span>ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</span>
                 </div>
 
+                <!-- Submit Button -->
                 <button type="submit" 
-                    class="w-full py-3.5 px-4 mt-6 rounded-xl font-medium text-white shadow-lg shadow-medical-500/30 dark:shadow-blue-900/40
-                           bg-medical-500 hover:bg-medical-600 
-                           dark:bg-gradient-to-r dark:from-blue-600 dark:to-indigo-600 dark:hover:from-blue-700 dark:hover:to-indigo-700
-                           transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex justify-center items-center gap-2">
-                    <span>Sign In</span>
-                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        id="submit-btn"
+                        class="w-full py-3.5 px-4 mt-6 rounded-xl font-medium text-white shadow-lg shadow-medical-500/30 dark:shadow-blue-900/40
+                               bg-medical-500 hover:bg-medical-600 
+                               dark:bg-gradient-to-r dark:from-blue-600 dark:to-indigo-600 dark:hover:from-blue-700 dark:hover:to-indigo-700
+                               transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 
+                               flex justify-center items-center gap-2
+                               disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none">
+                    <span id="btn-text">Sign In</span>
+                    <i data-lucide="arrow-right" id="btn-icon" class="w-4 h-4"></i>
+                    <!-- Loading Spinner (hidden by default) -->
+                    <svg id="btn-spinner" class="hidden w-5 h-5 spinner" viewBox="0 0 24 24" fill="none">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
                 </button>
             </form>
             
         </div>
 
+        <!-- Footer -->
         <p class="text-center text-xs text-medical-900/40 dark:text-slate-500 mt-8 font-medium">
             &copy;2026 - 360DE - All rights reserved.
         </p>
@@ -185,7 +229,7 @@
         // --- Register Service Worker ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('./sw.js')
                     .then((reg) => {
                         console.log('[PWA] Service Worker registered:', reg.scope);
                     })
@@ -198,9 +242,20 @@
         // Init Lucide Icons
         lucide.createIcons();
 
-        // --- Theme Logic ---
+        // --- DOM Elements ---
         const html = document.documentElement;
-        
+        const passwordInput = document.getElementById('password');
+        const passwordToggle = document.getElementById('password-toggle');
+        const eyeIcon = document.getElementById('eye-icon');
+        const eyeOffIcon = document.getElementById('eye-off-icon');
+        const errorMsg = document.getElementById('error-msg');
+        const usernameInput = document.getElementById('username');
+        const submitBtn = document.getElementById('submit-btn');
+        const btnText = document.getElementById('btn-text');
+        const btnIcon = document.getElementById('btn-icon');
+        const btnSpinner = document.getElementById('btn-spinner');
+
+        // --- Theme Logic ---
         function applyTheme(isDark) {
             if (isDark) {
                 html.classList.add('dark');
@@ -218,42 +273,102 @@
             applyTheme(false); // Default Light
         }
 
-        // Toggle Event
+        // Toggle Theme Event
         document.getElementById('theme-toggle').addEventListener('click', () => {
             applyTheme(!html.classList.contains('dark'));
         });
 
+        // --- Password Visibility Toggle ---
+        passwordToggle.addEventListener('click', () => {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            eyeIcon.classList.toggle('hidden', !isPassword);
+            eyeOffIcon.classList.toggle('hidden', isPassword);
+        });
+
+        // --- Hide Error on Input ---
+        let errorTimeout = null;
+
+        function hideError() {
+            errorMsg.classList.add('hidden');
+            errorMsg.classList.remove('flex');
+            if (errorTimeout) {
+                clearTimeout(errorTimeout);
+                errorTimeout = null;
+            }
+        }
+
+        function showError() {
+            errorMsg.classList.remove('hidden');
+            errorMsg.classList.add('flex');
+            
+            // Auto-hide after 5 seconds
+            if (errorTimeout) clearTimeout(errorTimeout);
+            errorTimeout = setTimeout(hideError, 5000);
+        }
+
+        // Hide error when user starts typing
+        usernameInput.addEventListener('input', hideError);
+        passwordInput.addEventListener('input', hideError);
+
         // --- Login Logic ---
         function handleLogin(e) {
             e.preventDefault();
-            const u = document.getElementById('username').value;
-            const p = document.getElementById('password').value;
-            const err = document.getElementById('error-msg');
+            
+            const u = usernameInput.value.trim();
+            const p = passwordInput.value;
 
-            if (u === 'admin' && p === 'admin') {
-                // Success Animation Button
-                const btn = document.querySelector('button[type="submit"]');
-                btn.innerHTML = '<i data-lucide="check" class="w-5 h-5"></i> Success';
-                btn.classList.remove('bg-medical-500', 'dark:bg-gradient-to-r');
-                btn.classList.add('bg-emerald-500');
-                lucide.createIcons();
-                
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 600);
-            } else {
-                err.classList.remove('hidden');
-                // Shake Form
-                const card = document.querySelector('main > div');
-                card.animate([
-                    { transform: 'translateX(0)' },
-                    { transform: 'translateX(-5px)' },
-                    { transform: 'translateX(5px)' },
-                    { transform: 'translateX(0)' }
-                ], { duration: 300 });
-                
-                document.getElementById('password').value = '';
-            }
+            // Show loading state
+            submitBtn.disabled = true;
+            btnText.textContent = 'กำลังเข้าสู่ระบบ...';
+            btnIcon.classList.add('hidden');
+            btnSpinner.classList.remove('hidden');
+
+            // Simulate network delay (remove in production)
+            setTimeout(() => {
+                if (u === 'admin' && p === 'admin') {
+                    // Success
+                    btnText.textContent = 'สำเร็จ';
+                    btnSpinner.classList.add('hidden');
+                    submitBtn.classList.remove('bg-medical-500', 'dark:from-blue-600', 'dark:to-indigo-600');
+                    submitBtn.classList.add('bg-emerald-500', 'dark:bg-emerald-500');
+                    
+                    // Show check icon
+                    btnIcon.classList.remove('hidden');
+                    btnIcon.setAttribute('data-lucide', 'check');
+                    lucide.createIcons();
+                    
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 600);
+                } else {
+                    // Error
+                    showError();
+                    
+                    // Shake animation
+                    const card = document.querySelector('main > div');
+                    card.animate([
+                        { transform: 'translateX(0)' },
+                        { transform: 'translateX(-5px)' },
+                        { transform: 'translateX(5px)' },
+                        { transform: 'translateX(-5px)' },
+                        { transform: 'translateX(5px)' },
+                        { transform: 'translateX(0)' }
+                    ], { duration: 400 });
+                    
+                    // Reset button
+                    submitBtn.disabled = false;
+                    btnText.textContent = 'Sign In';
+                    btnSpinner.classList.add('hidden');
+                    btnIcon.classList.remove('hidden');
+                    btnIcon.setAttribute('data-lucide', 'arrow-right');
+                    lucide.createIcons();
+                    
+                    // Clear password
+                    passwordInput.value = '';
+                    passwordInput.focus();
+                }
+            }, 800); // Simulated delay
         }
     </script>
 </body>
