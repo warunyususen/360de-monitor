@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>360DE Temperature Monitor</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#0ea5e9">
+    <meta name="description" content="ระบบตรวจวัดอุณหภูมิอัจฉริยะ - 360DE Temperature Monitor">
+    
+    <!-- iOS PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="360DE Monitor">
+    <link rel="apple-touch-icon" href="icons/icon-180.png">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="icon" type="image/jpg" href="360DE.jpg">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        // ชุดสี Medical (สำหรับ Light Mode)
+                        medical: {
+                            50: '#f0f9ff',  // พื้นหลังฟ้าอ่อนสุด
+                            100: '#e0f2fe', // เส้นขอบจาง
+                            500: '#0ea5e9', // สีหลัก (ฟ้า Sky)
+                            600: '#0284c7', // สีตอน Hover
+                            900: '#0c4a6e', // สีตัวอักษรเข้ม
+                        },
+                        // ชุดสีเดิม (Slate) มีใน Tailwind อยู่แล้ว
+                        slate: {
+                            850: '#151F32', // พื้นหลัง Dark mode ลึกๆ
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 7s infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        .glass-panel {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .fade-in {
+            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body class="bg-medical-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-500 min-h-screen flex items-center justify-center p-4 selection:bg-medical-500 selection:text-white">
+
+    <button id="theme-toggle" class="absolute top-4 right-4 p-3 rounded-full bg-white/80 dark:bg-slate-800/80 shadow-lg hover:shadow-xl transition-all border border-medical-100 dark:border-slate-700 group z-50">
+        <i data-lucide="sun" class="hidden dark:block w-5 h-5 text-yellow-400"></i>
+        <i data-lucide="moon" class="block dark:hidden w-5 h-5 text-medical-900 group-hover:text-medical-500 transition-colors"></i>
+    </button>
+
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-medical-200 dark:bg-blue-600 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-3xl opacity-30 dark:opacity-20 animate-blob"></div>
+        <div class="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-blue-200 dark:bg-emerald-600 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-3xl opacity-30 dark:opacity-20 animate-blob animation-delay-2000"></div>
+    </div>
+
+    <main class="w-full max-w-[400px] relative z-10 fade-in">
+        
+        <div class="relative bg-white/70 dark:bg-slate-800/60 glass-panel 
+                    rounded-[2rem] dark:rounded-2xl 
+                    shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-2xl 
+                    border border-white/60 dark:border-slate-700 
+                    p-8 transition-all duration-500">
+            
+            <div class="absolute top-6 right-6 flex items-center gap-2">
+                <span class="relative flex h-3 w-3">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+                <span class="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 tracking-wider">ONLINE</span>
+            </div>
+
+            <div class="text-center mb-8 pt-2">
+                <div class="w-24 h-24 mx-auto mb-4 rounded-full p-1 bg-gradient-to-tr from-white to-medical-50 dark:from-slate-700 dark:to-slate-600 shadow-lg">
+                    <img src="360DE.jpg" alt="Logo" class="w-full h-full object-cover rounded-full border-1 border-white dark:border-slate-800">
+                </div>
+                <h1 class="font-display text-2xl font-bold text-medical-900 dark:text-white mb-1">360DE Monitor</h1>
+                <p class="text-sm text-slate-500 dark:text-slate-400 font-light">ระบบตรวจวัดอุณหภูมิอัจฉริยะ</p>
+            </div>
+
+            <form id="login-form" class="space-y-5" onsubmit="handleLogin(event)">
+                
+                <div class="group">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Username</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i data-lucide="user" class="w-5 h-5 text-medical-500/50 dark:text-slate-500 group-focus-within:text-medical-500 dark:group-focus-within:text-blue-500 transition-colors"></i>
+                        </div>
+                        <input type="text" id="username" required 
+                            class="block w-full pl-11 pr-4 py-3.5 
+                                   bg-white dark:bg-slate-900/50 
+                                   border border-medical-100 dark:border-slate-600 
+                                   rounded-2xl 
+                                   text-slate-900 dark:text-white 
+                                   placeholder-slate-400/70 
+                                   focus:outline-none focus:border-medical-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-medical-500/10 dark:focus:ring-blue-500/20 
+                                   transition-all duration-300"
+                            placeholder="Enter ID">
+                    </div>
+                </div>
+
+                <div class="group">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i data-lucide="lock" class="w-5 h-5 text-medical-500/50 dark:text-slate-500 group-focus-within:text-medical-500 dark:group-focus-within:text-blue-500 transition-colors"></i>
+                        </div>
+                        <input type="password" id="password" required 
+                            class="block w-full pl-11 pr-4 py-3.5 
+                                   bg-white dark:bg-slate-900/50 
+                                   border border-medical-100 dark:border-slate-600 
+                                   rounded-2xl 
+                                   text-slate-900 dark:text-white 
+                                   placeholder-slate-400/70 
+                                   focus:outline-none focus:border-medical-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-medical-500/10 dark:focus:ring-blue-500/20 
+                                   transition-all duration-300"
+                            placeholder="••••••••">
+                    </div>
+                </div>
+
+                <div id="error-msg" class="hidden flex items-center gap-2 text-red-500 text-sm bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-xl border border-red-100 dark:border-red-900/30 animate-shake">
+                    <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                    <span>Incorrect credentials</span>
+                </div>
+
+                <button type="submit" 
+                    class="w-full py-3.5 px-4 mt-6 rounded-xl font-medium text-white shadow-lg shadow-medical-500/30 dark:shadow-blue-900/40
+                           bg-medical-500 hover:bg-medical-600 
+                           dark:bg-gradient-to-r dark:from-blue-600 dark:to-indigo-600 dark:hover:from-blue-700 dark:hover:to-indigo-700
+                           transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex justify-center items-center gap-2">
+                    <span>Sign In</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </form>
+            
+        </div>
+
+        <p class="text-center text-xs text-medical-900/40 dark:text-slate-500 mt-8 font-medium">
+            &copy;2026 - 360DE - All rights reserved.
+        </p>
+    </main>
+
+    <script>
+        // --- Register Service Worker ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((reg) => {
+                        console.log('[PWA] Service Worker registered:', reg.scope);
+                    })
+                    .catch((err) => {
+                        console.error('[PWA] Service Worker registration failed:', err);
+                    });
+            });
+        }
+
+        // Init Lucide Icons
+        lucide.createIcons();
+
+        // --- Theme Logic ---
+        const html = document.documentElement;
+        
+        function applyTheme(isDark) {
+            if (isDark) {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Check Saved Theme
+        if (localStorage.getItem('theme') === 'dark') {
+            applyTheme(true);
+        } else {
+            applyTheme(false); // Default Light
+        }
+
+        // Toggle Event
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            applyTheme(!html.classList.contains('dark'));
+        });
+
+        // --- Login Logic ---
+        function handleLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            const err = document.getElementById('error-msg');
+
+            if (u === 'admin' && p === 'admin') {
+                // Success Animation Button
+                const btn = document.querySelector('button[type="submit"]');
+                btn.innerHTML = '<i data-lucide="check" class="w-5 h-5"></i> Success';
+                btn.classList.remove('bg-medical-500', 'dark:bg-gradient-to-r');
+                btn.classList.add('bg-emerald-500');
+                lucide.createIcons();
+                
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 600);
+            } else {
+                err.classList.remove('hidden');
+                // Shake Form
+                const card = document.querySelector('main > div');
+                card.animate([
+                    { transform: 'translateX(0)' },
+                    { transform: 'translateX(-5px)' },
+                    { transform: 'translateX(5px)' },
+                    { transform: 'translateX(0)' }
+                ], { duration: 300 });
+                
+                document.getElementById('password').value = '';
+            }
+        }
+    </script>
+</body>
+</html>
