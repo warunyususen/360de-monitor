@@ -1,92 +1,107 @@
 // 360DE Temperature Monitor - Service Worker
-// Version: 1.0.1 - Fixed for GitHub Pages subdirectory
+// Version: 1.2.0 - Added favicon + updated cache list
+// Cache Strategy: Network First, fallback to Cache
 
-const CACHE_NAME = '360de-monitor-v1';
+const CACHE_NAME = '360de-monitor-v3';
 
-// ใช้ relative paths สำหรับ subdirectory hosting
+// ไฟล์ที่ต้อง cache สำหรับ offline support
 const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
-  './360DE.jpg',
-  './icons/icon-180.png',
-  './icons/icon-192.png',
-  './icons/icon-512.png'
+    './',
+    './index.html',
+    './dashboard.html',
+    './360DE.jpg',
+    './manifest.json',
+    './favicon.ico',
+    './icons/icon-180.png',
+    './icons/icon-192.png',
+    './icons/icon-512.png',
+    './icons/favicon-32.png',
+    './icons/favicon-16.png'
 ];
 
-// Install Event - Cache ไฟล์ทั้งหมด
+// Install Event — Cache ไฟล์ทั้งหมด
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing Service Worker...');
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('[SW] Caching app shell...');
-        return cache.addAll(ASSETS_TO_CACHE);
-      })
-      .then(() => {
-        console.log('[SW] App shell cached successfully');
-        return self.skipWaiting();
-      })
-      .catch((err) => {
-        console.error('[SW] Cache failed:', err);
-      })
-  );
+    console.log('[SW] Installing Service Worker v1.2.0...');
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then((cache) => {
+                console.log('[SW] Caching app shell...');
+                // ใช้ addAll แต่ไม่ให้ fail ถ้าบาง resource โหลดไม่ได้
+                return Promise.allSettled(
+                    ASSETS_TO_CACHE.map(url =>
+                        cache.add(url).catch(err => {
+                            console.warn('[SW] Failed to cache:', url, err);
+                        })
+                    )
+                );
+            })
+            .then(() => {
+                console.log('[SW] App shell cached successfully');
+                return self.skipWaiting();
+            })
+            .catch((err) => {
+                console.error('[SW] Install failed:', err);
+            })
+    );
 });
 
-// Activate Event - ลบ cache เก่า
+// Activate Event — ลบ cache เก่า
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating Service Worker...');
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => {
-            console.log('[SW] Deleting old cache:', name);
-            return caches.delete(name);
-          })
-      );
-    }).then(() => {
-      console.log('[SW] Claiming clients...');
-      return self.clients.claim();
-    })
-  );
+    console.log('[SW] Activating Service Worker...');
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames
+                    .filter((name) => name !== CACHE_NAME)
+                    .map((name) => {
+                        console.log('[SW] Deleting old cache:', name);
+                        return caches.delete(name);
+                    })
+            );
+        }).then(() => {
+            console.log('[SW] Claiming clients...');
+            return self.clients.claim();
+        })
+    );
 });
 
-// Fetch Event - Network First, fallback to Cache
+// Fetch Event — Network First, fallback to Cache
 self.addEventListener('fetch', (event) => {
-  // Skip non-GET requests
-  if (event.request.method !== 'GET') return;
+    // Skip non-GET requests
+    if (event.request.method !== 'GET') return;
 
-  // Skip chrome-extension and other non-http requests
-  if (!event.request.url.startsWith('http')) return;
+    // Skip non-http requests (chrome-extension, etc.)
+    if (!event.request.url.startsWith('http')) return;
 
-  event.respondWith(
-    // ลอง fetch จาก network ก่อน
-    fetch(event.request)
-      .then((networkResponse) => {
-        // ถ้าได้ response จาก network สำเร็จ
-        if (networkResponse && networkResponse.status === 200) {
-          // Clone response เพื่อเก็บ cache
-          const responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
-        }
-        return networkResponse;
-      })
-      .catch(() => {
-        // Network failed - ใช้ cache
-        console.log('[SW] Network failed, trying cache for:', event.request.url);
-        return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          // ถ้าไม่มีใน cache และเป็น navigate request - แสดง index
-          if (event.request.mode === 'navigate') {
-            return caches.match('./index.html');
-          }
-          return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
-        });
-      })
-  );
+    event.respondWith(
+        // ลอง fetch จาก network ก่อน
+        fetch(event.request)
+            .then((networkResponse) => {
+                // ถ้าได้ response จาก network สำเร็จ — cache ไว้
+                if (networkResponse && networkResponse.status === 200) {
+                    const responseClone = networkResponse.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, responseClone);
+                    });
+                }
+                return networkResponse;
+            })
+            .catch(() => {
+                // Network failed — ใช้ cache
+                console.log('[SW] Network failed, trying cache for:', event.request.url);
+                return caches.match(event.request).then((cachedResponse) => {
+                    if (cachedResponse) {
+                        return cachedResponse;
+                    }
+                    // ถ้าไม่มีใน cache และเป็น navigate request — แสดง index.html
+                    if (event.request.mode === 'navigate') {
+                        return caches.match('./index.html');
+                    }
+                    return new Response('Offline', {
+                        status: 503,
+                        statusText: 'Service Unavailable'
+                    });
+                });
+            })
+    );
 });
